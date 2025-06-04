@@ -7,7 +7,7 @@
 import boto3
 #import ruamel.yaml as yaml
 from ruamel.yaml import YAML
-import json
+import json, os
 from botocore.exceptions import ClientError
 import argparse
 import warnings
@@ -17,7 +17,10 @@ yaml = YAML(typ='rt')  # Create a YAML object with round-trip type for preservin
 #warnings.simplefilter('ignore', yaml.error.UnsafeLoaderWarning)
 
 global config
-s = boto3.Session()
+
+region = os.environ.get("AWS_REGION", "ca-central-1")
+s = boto3.Session(region_name=region)
+
 
 def get_cfn_outputs(stack_name, session):
   # Gets the outputs of a CloudFormation stack
