@@ -1110,6 +1110,8 @@ Resources:
       Parameters:
         - ParameterKey: OrganizationName
           ParameterValue: !Ref OrganizationName
+        - ParameterKey: OrganizationId
+          ParameterValue: !Ref OrganizationId
         - ParameterKey: AuditAccountID
           ParameterValue: !Ref AuditAccountID
         - ParameterKey: RolePrefix

@@ -15,21 +15,22 @@ def lambda_handler(event, context):
         event: lambda event
         context: lambda context
     """
-    bucket = event["Records"][0]["s3"]["bucket"]["name"]
-    key = event["Records"][0]["s3"]["object"]["key"]
-    s3_resource = boto3.resource("s3")
-    copy_source = {"Bucket": bucket, "Key": key}
+    # Commenting this out for now because we don't want to send data right now.
+    # bucket = event["Records"][0]["s3"]["bucket"]["name"]
+    # key = event["Records"][0]["s3"]["object"]["key"]
+    # s3_resource = boto3.resource("s3")
+    # copy_source = {"Bucket": bucket, "Key": key}
 
-    #print(key)
+    # #print(key)
     
-    #Todo: Not sure why this exist, its not being used anywhere? 
-    #account_id = context.invoked_function_arn.split(":")[4]
-    target_key = f"{org_id}/{key}"
-    logger.info("Attempting to copy audit data to GC managed s3 bucket: %s", target_key)
+    # #Todo: Not sure why this exist, its not being used anywhere? 
+    # #account_id = context.invoked_function_arn.split(":")[4]
+    # target_key = f"{org_id}/{key}"
+    # logger.info("Attempting to copy audit data to GC managed s3 bucket: %s", target_key)
 
-    if key.startswith("chunks/") or key.startswith("state/"):
-        pass
-    else:
-        s3_resource.Bucket(os.environ["target_bucket"]).Object(target_key).copy(
-            copy_source, ExtraArgs={"ACL": "bucket-owner-full-control"}
-        )
+    # if key.startswith("chunks/") or key.startswith("state/"):
+    #     pass
+    # else:
+    #     s3_resource.Bucket(os.environ["target_bucket"]).Object(target_key).copy(
+    #         copy_source, ExtraArgs={"ACL": "bucket-owner-full-control"}
+    #     )

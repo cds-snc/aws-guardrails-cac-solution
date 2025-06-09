@@ -6,6 +6,10 @@ Parameters:
     Type: String
     Default: ""
     Description: The name of the organization. Used as a prefix in resource names.
+  OrganizationId:
+    Type: String
+    Default: ""
+    Description: Organization id from the management account.
   AuditAccountID:
     Type: String
     Default: ""
@@ -112,6 +116,8 @@ Resources:
         Variables:
           OrganizationName:
             Ref: OrganizationName
+          OrganizationId:
+            Ref: OrganizationId
 
   CronTriggerLambdaPermissions:
     Condition: IsAuditAccount
