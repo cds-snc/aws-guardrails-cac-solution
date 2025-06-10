@@ -115,9 +115,7 @@ def apply_lambda_permissions():
 
     client = boto3.client("lambda")
      # Get the Organization ID for the condition
-    org_id = os.environ['ORG_ID']
-    logger.debug("Organization ID: %s", org_id)
-    logger.info("Organization ID: %s", org_id)
+    org_id = os.environ['OrganizationId']
     for lambda_name in lambda_functions:
         try:
             # Remove any existing permission with the same SID to avoid duplicates
