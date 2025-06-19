@@ -1,5 +1,5 @@
 # Makefile for aws_lambda_permissions_setup Lambda function
-# Provides commands for development, testing, and deployment
+# Provides commands for development and testing
 
 # Variables
 PYTHON = python3
@@ -12,9 +12,6 @@ COVERAGE = $(VENV_PYTHON) -m coverage
 PYLINT = $(VENV_PYTHON) -m pylint
 FLAKE8 = $(VENV_PYTHON) -m flake8
 BLACK = $(VENV_PYTHON) -m black
-
-# Default region (can be overridden with make REGION=other-region command)
-REGION = ca-central-1
 
 # Default target
 .PHONY: help

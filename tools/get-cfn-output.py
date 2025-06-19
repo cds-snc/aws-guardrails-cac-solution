@@ -20,7 +20,6 @@ global config
 
 region = os.environ.get("AWS_REGION", "ca-central-1")
 s = boto3.Session(region_name=region)
-# s = boto3.Session()
 
 
 def get_cfn_outputs(stack_name, session):
