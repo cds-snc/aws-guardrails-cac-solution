@@ -68,6 +68,7 @@ def apply_lambda_permissions():
     organization_name = os.environ['OrganizationName']
     logger.debug("Organization Name: %s", organization_name)
     i_result = 0
+    permissions_validated = 0
     lambda_functions = {
         f"{organization_name}gc01_check_alerts_flag_misuse": ["GC01CheckAlertsFlagMisuseLambda"],
         f"{organization_name}gc01_check_attestation_letter": ["GC01CheckAttestationLetterLambda"],
@@ -112,42 +113,114 @@ def apply_lambda_permissions():
         f"{organization_name}gc13_check_emergency_account_mgmt_approvals": ["GC13CheckEmergencyAccountMgmtApprovalsLambda"],
         f"{organization_name}gc13_check_emergency_account_testing": ["GC13CheckEmergencyAccountTestingLambda"],
     }
-
+    accounts = get_accounts()
     client = boto3.client("lambda")
-     # Get the Organization ID for the condition
-    org_id = os.environ['OrganizationId']
-    for lambda_name in lambda_functions:
-        try:
-            # Remove any existing permission with the same SID to avoid duplicates
-            try: 
-                client.remove_permission(
-                    FunctionName=lambda_name,
-                    StatementId="AllowConfigInvokeAllAccounts"
-                ) 
-            except client.exceptions.ResourceNotFoundException:
-                pass  # Permission does not exist yet
-            except Exception as e:
-                logger.warning(f"Could not remove existing permission for {lambda_name}: {e}")
-            response = client.add_permission(
-                Action="lambda:InvokeFunction",
-                FunctionName=lambda_name,
-                Principal="config.amazonaws.com",
-                StatementId="AllowConfigInvokeAllAccounts",
-                PrincipalOrgID=org_id
-            )
-            if not response.get("Statement"):
-                logger.error(f"Invalid response adding permission for {lambda_name}")
-                i_result = -1
-                break
-            else:
+    i_requests = 0
+    if accounts:
+        for lambda_name in lambda_functions:
+            # check if any accounts are currently authorized
+            authorized_accounts = []
+            sids_in_use = []
+            b_retry = True
+            b_completed = False
+            while b_retry and (not b_completed):
+                try:
+                    response = client.get_policy(FunctionName=lambda_name)
+                    i_requests += 1
+                    if i_requests % 3 == 0:
+                        # backing off the API to avoid throttling
+                        time.sleep(0.05)
+                    for statement in json.loads(response.get("Policy")).get("Statement"):
+                        if (
+                            statement.get("Principal").get("Service") == "config.amazonaws.com"
+                            and statement.get("Action") == "lambda:InvokeFunction"
+                            and statement.get("Effect") == "Allow"
+                        ):
+                            # this is an authorized account
+                            source_account = (statement.get("Condition").get("StringEquals").get("AWS:SourceAccount"))
+                            authorized_accounts.append(source_account)
+                            if statement.get("Sid", ""):
+                                sids_in_use.append(statement.get("Sid", ""))
+                    b_completed = True
+                except botocore.exceptions.ClientError as error:
+                    # are we being throttled?
+                    if error.response["Error"]["Code"] == "TooManyRequestsException":
+                        logger.warning("API call limit exceeded; backing off and retrying...")
+                        time.sleep(0.25)
+                        b_retry = True
+                    else:
+                        # no, some other error
+                        logger.error("boto3 error %s", error)
+                        b_retry = False
+                except (ValueError, TypeError):
+                    # let's assume the Lambda function permission does not exist
+                    logger.error("Unknown Exception trying to get policy for Lambda function '%s'.", lambda_name)
+                    b_retry = False
+            i = 0
+            b_throttle = False
+            # Only process the first 70 accounts
+            for account in accounts[:70]:
+                account_id = account["Id"]
+                account_status = str(account["Status"]).upper()
+                if (account_id in authorized_accounts) or (account_status != "ACTIVE"):
+                    # skip this account and go to the next loop iteration
+                    i += 1
+                    permissions_validated += 1
+                    continue
+                # we need to add the permission
+                compliant_resource_name = str(i) #f"p{i + 1}"
+                # ensure we are using a unique Sid
+                while compliant_resource_name in sids_in_use:
+                    i += 1
+                    compliant_resource_name = str(i) #f"p{i + 1}"
+                b_retry = True
+                b_permission_added = False
+                while b_retry and (not b_permission_added):
+                    # if we've been throttled, sleep 50ms every 5 calls
+                    if b_throttle and (i_requests % 5 == 0):
+                        time.sleep(0.05)
+                    try:
+                        i_requests += 1
+                        response = client.add_permission(
+                            Action="lambda:InvokeFunction",
+                            FunctionName=lambda_name,
+                            Principal="config.amazonaws.com",
+                            SourceAccount=account_id,
+                            StatementId=compliant_resource_name,
+                        )
+                        if not response.get("Statement"):
+                            # invalid response
+                            logger.error("Invalid response adding permission for account '%s' to the '%s'", account_id, lambda_name)
+                            i_result = -1
+                            b_retry = False
+                            break
+                        else:
+                            # success
+                            permissions_validated += 1
+                            b_permission_added = True
+                    except botocore.exceptions.ClientError as error:
+                        # error while trying to add the permission
+                        # are we being throttled?
+                        if (error.response["Error"]["Code"] == "TooManyRequestsException"):
+                            logger.warning("API call limit exceeded; backing off and retrying...")
+                            b_throttle = True
+                            b_retry = True
+                            time.sleep(0.25)
+                        else:
+                            logger.error("Error while adding permission for account '%s' to the '%s' lambda", account_id, lambda_name)
+                            logger.error("Error: {%s}", error)
+                            i_result = -1
+                            b_retry = False
+                i += 1
+                if i_result == -1:
+                    # we ran into errors, stop the process
+                    break
+            if i_result != -1 and permissions_validated > 0:
+                # success!
                 i_result = 1
-        except botocore.exceptions.ClientError as error:
-            logger.error(f"Error while adding permission for {lambda_name}: {error}")
-            i_result = -1
-            break
+    else:
+        logger.error("No accounts listed - unable to add Lambda permissions to template")
     return i_result
-
-    #
 
 
 def send(event, context, response_status, response_data, physical_resource_id=None, no_echo=False, reason=None):
