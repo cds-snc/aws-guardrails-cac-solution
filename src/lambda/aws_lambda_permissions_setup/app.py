@@ -221,12 +221,12 @@ def apply_lambda_permissions():
                             and statement.get("Effect") == "Allow"
                         ):
                             # this is an authorized account
-                            source_account = (
-                                statement.get("Condition")
-                                .get("StringEquals")
-                                .get("AWS:SourceAccount")
-                            )
-                            authorized_accounts.append(source_account)
+                            try:
+                                source_account = (statement.get("Condition").get("StringEquals").get("AWS:SourceAccount"))
+                                authorized_accounts.append(source_account)
+                            except AttributeError:
+                                source_account = ""
+                            
                             if statement.get("Sid", ""):
                                 sids_in_use.append(statement.get("Sid", ""))
                     b_completed = True
