@@ -211,12 +211,14 @@ def apply_lambda_permissions():
                     if i_requests % 3 == 0:
                         # backing off the API to avoid throttling
                         time.sleep(0.05)
-                    for statement in json.loads(response.get("Policy")).get(
-                        "Statement"
-                    ):
+                    for statement in json.loads(response.get("Policy")).get("Statement"):
+                        try:
+                            service = statement.get("Principal").get("Service")
+                        except AttributeError:
+                            service = "*"
+                        
                         if (
-                            statement.get("Principal").get("Service")
-                            == "config.amazonaws.com"
+                            service == "config.amazonaws.com"
                             and statement.get("Action") == "lambda:InvokeFunction"
                             and statement.get("Effect") == "Allow"
                         ):
@@ -229,7 +231,10 @@ def apply_lambda_permissions():
                             
                             if statement.get("Sid", ""):
                                 sids_in_use.append(statement.get("Sid", ""))
+                            
                     b_completed = True
+                    
+
                 except botocore.exceptions.ClientError as error:
                     # are we being throttled?
                     if error.response["Error"]["Code"] == "TooManyRequestsException":
@@ -249,6 +254,7 @@ def apply_lambda_permissions():
                         lambda_name,
                     )
                     b_retry = False
+            
             i = 0
             b_throttle = False
             # Only process the first 70 accounts until SSC fixes the issue with many accounts
@@ -268,12 +274,14 @@ def apply_lambda_permissions():
                     compliant_resource_name = str(i)
                 b_retry = True
                 b_permission_added = False
+            
                 while b_retry and (not b_permission_added):
                     # if we've been throttled, sleep 50ms every 5 calls
                     if b_throttle and (i_requests % 5 == 0):
                         time.sleep(0.05)
                     try:
                         i_requests += 1
+                        
                         response = client.add_permission(
                             Action="lambda:InvokeFunction",
                             FunctionName=lambda_name,
@@ -281,6 +289,7 @@ def apply_lambda_permissions():
                             SourceAccount=account_id,
                             StatementId=compliant_resource_name,
                         )
+                    
                         if not response.get("Statement"):
                             # invalid response
                             logger.error(
