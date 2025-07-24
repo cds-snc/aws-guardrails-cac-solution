@@ -214,9 +214,9 @@ def apply_lambda_permissions():
                         
                         # this is a regular account so we can add the config service permission
                         response = client.add_permission(
-                            Action="*",
+                            Action="lambda:InvokeFunction",
                             FunctionName=lambda_name,
-                            Principal="config.amazonaws.com",
+                            Principal="*",
                             SourceAccount=account_id,
                             StatementId=compliant_resource_name,
                         )

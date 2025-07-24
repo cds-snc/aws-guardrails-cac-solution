@@ -102,7 +102,7 @@ Parameters:
     Type: String
   LogArchiveAccountName:
     Type: String
-    Default: LogArchive
+    Default: Log Archive
   # GC11
   S3MonitoringUseCasesPath:
     Type: String
