@@ -527,7 +527,7 @@ frameworks_data = [
                     },
                     {
                         "type": "Custom",
-                        "name": "gc07_check_secure_network_transmission_policy",
+                        "name": "gc07_check_secure_network_trans_policy",
                         "description": "Confirm that a secure network transmission policy has been provided.Source: https://github.com/canada-ca/cloud-guardrails/blob/master/EN/07_Protect-Data-in-Transit.md",
                         "testingInformation": "",
                         "actionPlanTitle": "Provide a Secure Network Transmission Policy document",
@@ -540,7 +540,7 @@ frameworks_data = [
                                 "sourceType": "AWS_Config",
                                 "sourceKeyword": {
                                     "keywordInputType": "SELECT_FROM_LIST",
-                                    "keywordValue": "Custom_gc07_check_secure_network_transmission_policy-conformance-pack",
+                                    "keywordValue": "Custom_gc07_check_secure_network_trans_policy-conformance-pack",
                                 },
                             }
                         ],
