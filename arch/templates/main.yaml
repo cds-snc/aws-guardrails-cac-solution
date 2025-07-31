@@ -1110,8 +1110,6 @@ Resources:
       Parameters:
         - ParameterKey: OrganizationName
           ParameterValue: !Ref OrganizationName
-        - ParameterKey: OrganizationId
-          ParameterValue: !Ref OrganizationId
         - ParameterKey: AuditAccountID
           ParameterValue: !Ref AuditAccountID
         - ParameterKey: RolePrefix
@@ -1910,7 +1908,7 @@ Resources:
             #   - !Ref AuditAccountID
           Regions:
             - ca-central-1
-      StackSetName: !Sub "${OrganizationName}-GC-AuditAccount-EvidenceCollection"
+      StackSetName: !Sub "${OrganizationName}-GC-AuditAccount-EvidenceCollection-v2"
       Tags:
         - Key: Source
           Value: "ProServe Delivery Kit"

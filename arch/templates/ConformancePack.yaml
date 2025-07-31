@@ -102,7 +102,7 @@ Parameters:
     Type: String
   LogArchiveAccountName:
     Type: String
-    Default: Log Archive
+    Default: LogArchive
   # GC11
   S3MonitoringUseCasesPath:
     Type: String
@@ -864,7 +864,7 @@ Resources:
   GC07CheckSecureNetworkTransmissionPolicyConfigRule:
     Type: "AWS::Config::ConfigRule"
     Properties:
-      ConfigRuleName: gc07_check_secure_network_transmission_policy
+      ConfigRuleName: gc07_check_secure_network_trans_policy
       Description: Checks S3 bucket for the secure network transmission policy
       InputParameters:
         s3ObjectPath:
@@ -893,7 +893,7 @@ Resources:
             - ""
             - - "arn:aws:lambda:ca-central-1:"
               - Ref: AuditAccountID
-              - !Sub ":function:${OrganizationName}gc07_check_secure_network_transmission_policy"
+              - !Sub ":function:${OrganizationName}gc07_check_secure_network_trans_policy"
         SourceDetails:
           - EventSource: "aws.config"
             MessageType: "ScheduledNotification"
