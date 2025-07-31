@@ -99,7 +99,11 @@ def lambda_handler(event, context):
     target_role_name = "cbs-global-reader"
     file_param_name = "S3LogBucketsPath"
     log_buckets_s3_path = rule_parameters.get(file_param_name, "")
-    log_archive_account_name = rule_parameters["LogArchiveAccountName"]
+    
+    # Commenting out due to a bug on SSC's side that will be fixed in v2.0.6. Our account is called "Log Archive" as opposed to the default "LogArchive"
+    #log_archive_account_name = rule_parameters["LogArchiveAccountName"]
+    log_archive_account_name = "Log Archive"  # Default value for the log archive account name in CDS's organization
+
 
     aws_organizations_client = get_client("organizations", aws_account_id, execution_role_name, is_not_audit_account)
 
