@@ -30,7 +30,6 @@ terraform/
 ├── alarms.tf                  # CloudWatch monitoring & alerting
 ├── sns.tf                     # SNS topic for notifications
 ├── outputs.tf                 # Output values
-├── terraform.tfvars.example   # Example configuration file
 ├── terragrunt.hcl            # Terragrunt configuration
 └── README.md                  # This documentation
 ```
@@ -41,10 +40,6 @@ terraform/
 ```bash
 # Navigate to terraform directory
 cd terraform/
-
-# Copy and configure variables
-cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your specific values
 
 # Deploy with Terragrunt
 terragrunt plan
@@ -58,10 +53,6 @@ cd terraform/
 
 # Initialize Terraform
 terraform init
-
-# Copy and configure variables
-cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your specific values
 
 # Deploy
 terraform validate
@@ -78,19 +69,6 @@ terraform apply
 5. **Slack Webhook**: (Optional) For Slack notifications
 
 ## 🔧 Configuration
-
-### **Required Variables in terraform.tfvars:**
-```hcl
-# AWS Configuration
-aws_region     = "ca-central-1"
-aws_account_id = "886481071419"
-
-# S3 bucket containing the CSV compliance files
-s3_bucket_name = "gc-fedclient-886481071419-ca-central-1"
-
-# Slack webhook URL for notifications
-slack_webhook_url = "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
-```
 
 ### **Optional Configuration:**
 ```hcl
