@@ -26,7 +26,7 @@ variable "lambda_source_dir" {
 }
 
 variable "slack_webhook_url" {
-  description = "Slack webhook URL for sending notifications" 
+  description = "Slack webhook URL for sending notifications"
   type        = string
   sensitive   = true
 }

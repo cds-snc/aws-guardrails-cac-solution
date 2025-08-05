@@ -11,7 +11,7 @@ data "archive_file" "s3_csv_to_slack_zip" {
 }
 
 locals {
-    s3_bucket_arn = "arn:aws:s3:::${var.s3_bucket_name}"
+  s3_bucket_arn = "arn:aws:s3:::${var.s3_bucket_name}"
 }
 
 # IAM role for the Lambda function
@@ -51,8 +51,8 @@ resource "aws_iam_policy" "s3_csv_to_slack_s3_policy" {
           "s3:ListBucket"
         ]
         Resource = [
-            local.s3_bucket_arn,
-            "${local.s3_bucket_arn}/*"
+          local.s3_bucket_arn,
+          "${local.s3_bucket_arn}/*"
         ]
       }
     ]
