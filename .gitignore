@@ -2,3 +2,10 @@ _temp/
 **/build/
 **/build.toml
 out.yaml
+.terragrunt*
+.terraform.lock.hcl
+.terragrunt-cache
+.terraform
+*.zip
+*.auto.tfvars
+.coverage
