@@ -95,6 +95,9 @@ resource "aws_lambda_function" "s3_csv_to_slack" {
   timeout       = local.lambda_config.timeout
   memory_size   = local.lambda_config.memory_size
 
+  # Attach Lambda layer
+  layers = ["arn:aws:lambda:ca-central-1:886481071419:layer:CloudGuardrailsCommonLayerPartEvidenceCollection:4"]
+
   source_code_hash = data.archive_file.s3_csv_to_slack_zip.output_base64sha256
 
   environment {

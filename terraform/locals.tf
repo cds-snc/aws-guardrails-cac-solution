@@ -12,14 +12,14 @@ locals {
     Project     = "aws-guardrails-cac-solution"
     Environment = var.environment
     ManagedBy   = "terraform"
-    Owner       = "security-team"
+    Owner       = "sre-team"
     CostCenter  = var.billing_code
   }
 
   # Lambda function configuration
   lambda_config = {
     name        = "${local.name_prefix}-s3-csv-to-slack"
-    runtime     = "python3.9"
+    runtime     = "python3.12"
     timeout     = 300
     memory_size = 512
     handler     = "app.lambda_handler"
