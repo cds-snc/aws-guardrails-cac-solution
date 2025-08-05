@@ -1,8 +1,9 @@
 name: AWS CAC Release
-on:
-  push:
-    tags:
-      - '[0-9]*.*'
+# Workflow disabled - uncomment 'on:' section to re-enable
+# on:
+#   push:
+#     tags:
+#       - '[0-9]*.*'
 
 env:
     REGION: ca-central-1
