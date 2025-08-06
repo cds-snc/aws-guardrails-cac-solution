@@ -54,7 +54,14 @@ resource "aws_iam_policy" "s3_csv_to_slack_s3_policy" {
           local.s3_bucket_arn,
           "${local.s3_bucket_arn}/*"
         ]
-      }
+      },
+    {
+        "Effect": "Allow",
+        "Action": [
+            "kms:Decrypt"
+        ],
+        "Resource": "arn:aws:kms:ca-central-1:886481071419:key/5dc0cc4d-683f-4f09-b727-6f3d11306285"
+    }
     ]
   })
 
