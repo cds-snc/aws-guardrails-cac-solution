@@ -1,24 +1,25 @@
 name: Deploy CAC Workflow
 
-on:
-  workflow_call:
-    inputs:
-      environment:
-        required: true
-        type: string
-      aws-region:
-        description: 'The AWS region to deploy to'
-        required: true
-        type: string
-      deploy-version:
-        description: 'The version to deploy'
-        required: true
-        type: string
-    secrets:
-      AWS_ROLE_ARN:
-        required: true
-      CONFIG_FILE_CONTENT:
-        required: true
+# Workflow disabled - uncomment 'on:' section to re-enable
+# on:
+#   workflow_call:
+#     inputs:
+#       environment:
+#         required: true
+#         type: string
+#       aws-region:
+#         description: 'The AWS region to deploy to'
+#         required: true
+#         type: string
+#       deploy-version:
+#         description: 'The version to deploy'
+#         required: true
+#         type: string
+#     secrets:
+#       AWS_ROLE_ARN:
+#         required: true
+#       CONFIG_FILE_CONTENT:
+#         required: true
         
 jobs:
   deploy:

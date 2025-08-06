@@ -1,10 +1,11 @@
 name: Deploy CAC To Test Pipeline
 
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+# Workflow disabled - uncomment 'on:' section to re-enable
+# on:
+#   workflow_dispatch:
+#   push:
+#     branches:
+#       - main
 
 concurrency:
   group: Deploy-CAC-Test
