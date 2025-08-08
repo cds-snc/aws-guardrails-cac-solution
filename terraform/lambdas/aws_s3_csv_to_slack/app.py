@@ -257,8 +257,8 @@ def send_to_slack(non_compliant_items, webhook_url, csv_file):
                 guardrail_groups[guardrail] = []
             guardrail_groups[guardrail].append(item)
         
-        # Add summary of guardrails affected
-        if len(guardrail_groups) > 1:
+        # Add summary of guardrails and their affected controls
+        if guardrail_groups:
             guardrails_text = f"*🎯 Affected Guardrails ({len(guardrail_groups)}):*\n"
             for guardrail, items in list(guardrail_groups.items())[:5]:  # Show up to 5 guardrails
                 guardrails_text += f"• `{guardrail}` ({len(items)} issues)\n"
@@ -276,67 +276,88 @@ def send_to_slack(non_compliant_items, webhook_url, csv_file):
             message["blocks"].append({
                 "type": "divider"
             })
-        
-        # Add detailed items (up to 8 items for better readability)
-        if filtered_items:
-            items_text = "*🔍 Non-Compliant Items Details:*\n"
             
-            for i, item in enumerate(filtered_items[:8], 1):
-                # Format account info
-                account_info = f"*Account:* `{item['accountId']}`"
+            # Add affected controls grouped by guardrail
+            for guardrail, items in guardrail_groups.items():
+                # Group items by control within this guardrail
+                control_groups = {}
+                for item in items:
+                    control_name = item.get('controlName', 'Unknown')
+                    if control_name not in control_groups:
+                        control_groups[control_name] = []
+                    control_groups[control_name].append(item)
                 
-                # Format control info
-                control_text = f"*Control:* `{item['controlName']}`"
-                if item.get('guardrail'):
-                    control_text += f"\n*Guardrail:* `{item['guardrail']}`"
-                
-                # Format resource info
-                resource_text = ""
-                if item.get('resourceType'):
-                    resource_text += f"*Type:* `{item['resourceType']}`"
-                
-                if item.get('resourceArn'):
-                    arn = item['resourceArn']
-                    # Smart ARN truncation - keep the resource ID part
-                    if len(arn) > 60:
-                        parts = arn.split(':')
-                        if len(parts) >= 6:
-                            # Keep account, service, region, and resource parts
-                            truncated = f"{parts[0]}:{parts[1]}:{parts[2]}:{parts[3]}:{parts[4]}:...{parts[-1][-20:]}"
-                        else:
-                            truncated = arn[:57] + "..."
-                        arn = truncated
+                # Create section for this guardrail's controls
+                controls_text = f"*🔧 {guardrail} - Affected Controls:*\n"
+                for control_name, control_items in control_groups.items():
+                    # Get unique account IDs for this control
+                    affected_accounts = list(set(item.get('accountId', '') for item in control_items if item.get('accountId')))
+                    affected_accounts.sort()  # Sort for consistent display
                     
-                    if resource_text:
-                        resource_text += f"\n*ARN:* `{arn}`"
+                    # Format the accounts list
+                    if len(affected_accounts) <= 5:
+                        accounts_display = ", ".join(f"`{acc}`" for acc in affected_accounts)
                     else:
-                        resource_text = f"*ARN:* `{arn}`"
+                        # Show first 4 accounts and indicate how many more
+                        first_accounts = ", ".join(f"`{acc}`" for acc in affected_accounts[:4])
+                        remaining_count = len(affected_accounts) - 4
+                        accounts_display = f"{first_accounts}, +{remaining_count} more"
+                    
+                    controls_text += f"• `{control_name}` ({len(control_items)} items)\n"
+                    controls_text += f"  📋 Accounts: {accounts_display}\n"
+                    
+                    # Group resources by type for better organization
+                    resource_types = {}
+                    for item in control_items:
+                        resource_type = item.get('resourceType', 'Unknown').strip()
+                        if resource_type not in resource_types:
+                            resource_types[resource_type] = []
+                        resource_types[resource_type].append(item)
+                    
+                    # Add resource type and ARN information
+                    for resource_type, type_items in resource_types.items():
+                        controls_text += f"  📦 Type: `{resource_type}` ({len(type_items)} items)\n"
+                        
+                        # Show up to 3 ARNs for this resource type
+                        arns_to_show = []
+                        for item in type_items[:3]:
+                            arn = item.get('resourceArn', '').strip()
+                            if arn:
+                                # Smart ARN truncation for display
+                                if len(arn) > 60:
+                                    parts = arn.split(':')
+                                    if len(parts) >= 6:
+                                        # Keep the resource identifier part
+                                        truncated = f"{parts[0]}:{parts[1]}:{parts[2]}:{parts[3]}:{parts[4]}:...{parts[-1][-20:]}"
+                                    else:
+                                        truncated = arn[:57] + "..."
+                                    arns_to_show.append(truncated)
+                                else:
+                                    arns_to_show.append(arn)
+                        
+                        if arns_to_show:
+                            for i, arn in enumerate(arns_to_show):
+                                controls_text += f"    • `{arn}`\n"
+                            
+                            # Indicate if there are more ARNs
+                            if len(type_items) > 3:
+                                remaining_arns = len(type_items) - 3
+                                controls_text += f"    • ...and {remaining_arns} more resources\n"
+                        else:
+                            controls_text += f"    • No ARN information available\n"
+                    
+                    controls_text += "\n"  # Add spacing between controls
                 
-                # Combine into a nicely formatted section
-                item_block = {
+                message["blocks"].append({
                     "type": "section",
-                    "fields": [
-                        {
-                            "type": "mrkdwn",
-                            "text": account_info
-                        },
-                        {
-                            "type": "mrkdwn", 
-                            "text": control_text
-                        }
-                    ]
-                }
-                
-                if resource_text:
-                    item_block["fields"].append({
+                    "text": {
                         "type": "mrkdwn",
-                        "text": resource_text
-                    })
+                        "text": controls_text
+                    }
+                })
                 
-                message["blocks"].append(item_block)
-                
-                # Add a subtle divider between items (except for the last one)
-                if i < min(8, len(filtered_items)):
+                # Add a divider between guardrails (except for the last one)
+                if guardrail != list(guardrail_groups.keys())[-1]:
                     message["blocks"].append({
                         "type": "context",
                         "elements": [
@@ -346,18 +367,6 @@ def send_to_slack(non_compliant_items, webhook_url, csv_file):
                             }
                         ]
                     })
-            
-            # Show count of additional items if there are more
-            if len(filtered_items) > 8:
-                message["blocks"].append({
-                    "type": "context",
-                    "elements": [
-                        {
-                            "type": "mrkdwn",
-                            "text": f"📋 *{len(filtered_items) - 8} additional non-compliant items not shown above*"
-                        }
-                    ]
-                })
         
         # Add footer with action suggestion
         message["blocks"].extend([
