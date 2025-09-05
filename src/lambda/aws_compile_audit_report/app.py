@@ -292,7 +292,14 @@ def get_all_evidence_folders_paginated(auditmanager_client, assessment_id):
             )
 
         for folder in resp.get("evidenceFolders", []):
-            yield folder
+            # filter evidence folders by today's date instead of yielding every folder
+            cutoff = datetime.datetime.now(
+                tz=datetime.timezone.utc
+            ) - datetime.timedelta(days=1)
+
+            date = folder.get("date")
+            if date and date > cutoff:
+                yield folder
 
         next_token = resp.get("nextToken")
         if not next_token:
